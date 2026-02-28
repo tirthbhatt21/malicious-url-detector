@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Advanced URL Security Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <main class="container">
+    <h1>🛡 Advanced URL Security Analyzer</h1>
+
+    <!-- Input -->
+    <div class="input-box">
+      <input
+        id="urlInput"
+        type="text"
+        placeholder="https://example.com"
+      />
+      <button onclick="analyze()">Analyze</button>
+    </div>
+    <p id="error" class="error"></p>
+
+    <!-- Result -->
+    <div id="result" class="card hidden">
+      <div class="summary">
+        <span id="score"></span>
+        <span id="severity" class="badge"></span>
+        <span id="confidence"></span>
+      </div>
+
+      <h3>📌 Detection Reasons</h3>
+      <ul id="reasons"></ul>
+
+      <h3>🔍 Feature Importance</h3>
+      <div id="features"></div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="divider"></div>
+
+    <div class="footer-content">
+      <div>
+        <h2>🛡 Advanced URL Security Analyzer</h2>
+        <p>
+          Client-side malicious URL detection using heuristic rules and
+          ML-style confidence scoring.
+        </p>
+      </div>
+
+      <div>
+        <h3>Detection Engine</h3>
+        <ul>
+          <li>Phishing pattern detection</li>
+          <li>Brand impersonation</li>
+          <li>HTTPS validation</li>
+          <li>ML-style confidence</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Connect</h3>
+        <a href="https://tirth-bhatt-developer.web.app/" target="_blank">🌐 Portfolio</a><br />
+        <a href="https://github.com/tirthbhatt21" target="_blank">💻 GitHub</a>
+      </div>
+    </div>
+
+    <p class="copyright">
+      🧑‍💻 Made by <strong>Tirth Bhatt</strong> © 2026
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
