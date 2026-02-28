@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🛡 Advanced URL Security Analyzer
 
 A client-side URL security analysis tool designed to detect phishing and malicious URL patterns using heuristic rules and ML-style confidence scoring.
@@ -69,3 +70,6 @@ This design is ideal for:
 
 This tool provides heuristic-based analysis and does **not guarantee absolute security**.  
 Always verify suspicious URLs through trusted security sources.
+=======
+# malicious-url-detector
+>>>>>>> d0154fe0cf9214e9aaedc62bd9e7d8f041aa5724
