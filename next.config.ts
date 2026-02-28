@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export", // REQUIRED for GitHub Pages
+  output: "export", 
   images: {
-    unoptimized: true, // GitHub Pages does not support next/image optimization
+    unoptimized: true,
   },
-  trailingSlash: true, // Prevents 404s on refresh
+  trailingSlash: true,
+  basePath: "/malicious-url-detector",
+  assetPrefix: "/malicious-url-detector/",
 };
 
 module.exports = nextConfig;
