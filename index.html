@@ -271,7 +271,7 @@ async function analyze() {
     return;
   }
 
-  const tensor = tf.tensor2d([normalize(raw)]);
+  const tensor = tf.tensor2d([normalize(raw)], [1, normalize(raw).length]);
   const prob = (await model.predict(tensor).data())[0];
   tf.dispose(tensor);
 
@@ -299,4 +299,5 @@ Threat Level : ${lvl}
 }
 </script>
 </body>
+
 </html>
