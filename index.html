@@ -174,8 +174,8 @@ let aiReady = false;
 /* LOAD MODEL */
 async function loadAI() {
   try {
-    model = await tf.loadLayersModel("model/model.json");
-    scaler = await fetch("scaler.json").then(r => r.json());
+    model = await tf.loadLayersModel("./model/model.json");
+    scaler = await fetch("./scaler.json").then(r => r.json());
 
     if (!scaler.mean || !scaler.scale) {
       throw new Error("Invalid scaler.json");
