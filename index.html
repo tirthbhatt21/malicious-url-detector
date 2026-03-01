@@ -5,7 +5,6 @@
   <title>AI Cyber URL Analyzer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="link.ico">
-
   <style>
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap");
 
@@ -165,41 +164,57 @@ button {
 
 <!-- TFJS FIRST -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
-
 <script>
 let model = null;
 let scaler = null;
 let aiReady = false;
 
-/* LOAD MODEL */
+/* LOAD AI MODEL & SCALER */
 async function loadAI() {
   try {
-    model = await tf.loadLayersModel("model/model.json");
-    scaler = await fetch("scaler.json").then(r => r.json());
+    // Load the model
+    model = await tf.loadLayersModel("./model/model.json");
 
+    // Load the scaler
+    scaler = await fetch("./scaler.json").then(r => r.json());
     if (!scaler.mean || !scaler.scale) {
       throw new Error("Invalid scaler.json");
     }
 
+    // If model input shape is missing, build it dynamically
+    if (!model.inputs || model.inputs.length === 0) {
+      console.warn("Model missing input shape. Building manually...");
+      const inputDim = scaler.mean.length;
+      model.build([null, inputDim]);
+      console.log(`Model built with input shape [null, ${inputDim}]`);
+    }
+
     aiReady = true;
     console.log("🧠 AI Engine Ready");
+
   } catch (e) {
     alert("AI failed to load. Check console.");
     console.error(e);
   }
 }
+
 loadAI();
 
 /* LOADER TIMER */
 function showLoader(sec = 3) {
-  document.getElementById("loader").classList.remove("hidden");
-  document.getElementById("loaderText").classList.remove("hidden");
+  const loader = document.getElementById("loader");
+  const loaderText = document.getElementById("loaderText");
+  const timerEl = document.getElementById("timer");
+
+  loader.classList.remove("hidden");
+  loaderText.classList.remove("hidden");
   let t = sec;
-  document.getElementById("timer").textContent = t;
-  const i = setInterval(() => {
+  timerEl.textContent = t;
+
+  const interval = setInterval(() => {
     t--;
-    document.getElementById("timer").textContent = t;
-    if (t <= 0) clearInterval(i);
+    timerEl.textContent = t;
+    if (t <= 0) clearInterval(interval);
   }, 1000);
 }
 
@@ -242,11 +257,12 @@ function extractFeatures(urlStr) {
   ];
 }
 
+/* NORMALIZATION */
 function normalize(x) {
   return x.map((v, i) => (v - scaler.mean[i]) / scaler.scale[i]);
 }
 
-/* ANALYZE */
+/* ANALYZE URL */
 async function analyze() {
   if (!aiReady) {
     showLoader(3);
@@ -265,21 +281,22 @@ async function analyze() {
 
   showLoader(2);
   const raw = extractFeatures(url);
+
   if (raw.length !== scaler.mean.length) {
     hideLoader();
     alert("Feature mismatch with trained model");
     return;
   }
 
-  const tensor = tf.tensor2d([normalize(raw)], [1, normalize(raw).length]);
-  const prob = (await model.predict(tensor).data())[0];
-  tf.dispose(tensor);
+  const inputTensor = tf.tensor2d([normalize(raw)], [1, raw.length]);
+  const prob = (await model.predict(inputTensor).data())[0];
+  tf.dispose(inputTensor);
 
   hideLoader();
   render(url, prob);
 }
 
-/* OUTPUT */
+/* RENDER RESULTS */
 function render(url, p) {
   const r = Math.round(p * 100);
   const lvl = r > 80 ? "CRITICAL" : r > 60 ? "HIGH" : r > 40 ? "MEDIUM" : "LOW";
@@ -301,3 +318,4 @@ Threat Level : ${lvl}
 </body>
 
 </html>
+
