@@ -169,24 +169,19 @@ let model = null;
 let scaler = null;
 let aiReady = false;
 
-/* LOAD AI MODEL & SCALER */
+/* LOAD MODEL */
 async function loadAI() {
   try {
-    // Load the model
     model = await tf.loadLayersModel("./model/model.json");
-
-    // Load the scaler
     scaler = await fetch("./scaler.json").then(r => r.json());
+
     if (!scaler.mean || !scaler.scale) {
       throw new Error("Invalid scaler.json");
     }
 
-    // If model input shape is missing, build it dynamically
     if (!model.inputs || model.inputs.length === 0) {
-      console.warn("Model missing input shape. Building manually...");
       const inputDim = scaler.mean.length;
       model.build([null, inputDim]);
-      console.log(`Model built with input shape [null, ${inputDim}]`);
     }
 
     aiReady = true;
@@ -197,24 +192,24 @@ async function loadAI() {
     console.error(e);
   }
 }
-
 loadAI();
 
-/* LOADER TIMER */
+/* LOADER */
 function showLoader(sec = 3) {
   const loader = document.getElementById("loader");
-  const loaderText = document.getElementById("loaderText");
-  const timerEl = document.getElementById("timer");
+  const text = document.getElementById("loaderText");
+  const timer = document.getElementById("timer");
 
   loader.classList.remove("hidden");
-  loaderText.classList.remove("hidden");
-  let t = sec;
-  timerEl.textContent = t;
+  text.classList.remove("hidden");
 
-  const interval = setInterval(() => {
+  let t = sec;
+  timer.textContent = t;
+
+  const i = setInterval(() => {
     t--;
-    timerEl.textContent = t;
-    if (t <= 0) clearInterval(interval);
+    timer.textContent = t;
+    if (t <= 0) clearInterval(i);
   }, 1000);
 }
 
@@ -223,7 +218,7 @@ function hideLoader() {
   document.getElementById("loaderText").classList.add("hidden");
 }
 
-/* FEATURE EXTRACTION */
+/* FEATURE EXTRACTION (UNCHANGED) */
 function extractFeatures(urlStr) {
   const u = new URL(urlStr);
   const h = u.hostname;
@@ -257,12 +252,34 @@ function extractFeatures(urlStr) {
   ];
 }
 
-/* NORMALIZATION */
+/* NORMALIZE */
 function normalize(x) {
   return x.map((v, i) => (v - scaler.mean[i]) / scaler.scale[i]);
 }
 
-/* ANALYZE URL */
+/* ================= RULE ENGINE ================= */
+function ruleEngine(urlStr) {
+  let score = 0;
+  const u = new URL(urlStr);
+  const h = u.hostname;
+
+  const keywords = ["login","verify","secure","account","bank","update","password"];
+
+  if (urlStr.includes("@")) score += 60;
+  if (/^(\d+\.){3}\d+$/.test(h)) score += 40;
+  if (keywords.some(k => urlStr.toLowerCase().includes(k))) score += 25;
+  if (h.length > 25) score += 15;
+  if (h.split(".").length > 3) score += 20;
+  if (h.includes("-")) score += 10;
+  if (h.includes("xn--")) score += 40;
+  if (urlStr.length > 120) score += 20;
+  if (/bit\.ly|tinyurl/.test(urlStr)) score += 35;
+  if (/\.(php|exe|zip)$/.test(urlStr)) score += 25;
+
+  return Math.min(score, 100) / 100;
+}
+
+/* ANALYZE */
 async function analyze() {
   if (!aiReady) {
     showLoader(3);
@@ -275,42 +292,49 @@ async function analyze() {
   if (!url.startsWith("http")) url = "https://" + url;
 
   if (url.includes("google.com") || url.includes("github.com")) {
-    render(url, 0.02);
+    render(url, 0.02, 0);
     return;
   }
 
   showLoader(2);
-  const raw = extractFeatures(url);
 
+  const raw = extractFeatures(url);
   if (raw.length !== scaler.mean.length) {
     hideLoader();
     alert("Feature mismatch with trained model");
     return;
   }
 
-  const inputTensor = tf.tensor2d([normalize(raw)], [1, raw.length]);
-  const prob = (await model.predict(inputTensor).data())[0];
-  tf.dispose(inputTensor);
+  const tensor = tf.tensor2d([normalize(raw)]);
+  const mlProb = (await model.predict(tensor).data())[0];
+  tf.dispose(tensor);
+
+  const ruleProb = ruleEngine(url);
+
+  // 🔥 HYBRID SCORE
+  const finalProb = (0.7 * mlProb) + (0.3 * ruleProb);
 
   hideLoader();
-  render(url, prob);
+  render(url, finalProb, ruleProb);
 }
 
-/* RENDER RESULTS */
-function render(url, p) {
+/* OUTPUT */
+function render(url, p, rule = 0) {
   const r = Math.round(p * 100);
   const lvl = r > 80 ? "CRITICAL" : r > 60 ? "HIGH" : r > 40 ? "MEDIUM" : "LOW";
 
   document.getElementById("terminalOutput").textContent = `
 SCAN
-[+] TensorFlow.js Phishing Scan
+[+] AI Hybrid Phishing Scan
 ----------------------------------------
-Target       : ${url}
-ML Risk Prob : ${r}%
-Threat Level : ${lvl}
+Target        : ${url}
+ML Score      : ${Math.round(p*100)}%
+Rule Score    : ${Math.round(rule*100)}%
+Final Risk    : ${r}%
+Threat Level  : ${lvl}
 ----------------------------------------
 > AI Verdict : ${r > 60 ? "PHISHING SUSPECTED" : "LIKELY SAFE"}
-> Engine    : TF.JS ACTIVE`;
+> Engine    : HYBRID AI + RULES ACTIVE`;
 
   document.getElementById("result").classList.remove("hidden");
 }
