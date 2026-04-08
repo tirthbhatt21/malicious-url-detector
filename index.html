@@ -163,43 +163,46 @@ button {
 </footer>
 
 <script>
-let aiReady = true;
+/* ================= CONFIG ================= */
+const FEED_URL = "https://raw.githubusercontent.com/tirthbhatt21/malicious-url-detector/main/feed.json";
 
-/* ================= OFFLINE PHISHING FEED ================= */
-/* Simulated cached feeds (update manually weekly) */
-const PHISHING_FEED = [
-  "paypal-secure-login.com",
-  "apple-id-verify.net",
-  "google-account-warning.com",
-  "microsoft-auth-alert.net",
-  "amazon-security-check.com"
-];
-
-/* ================= BEHAVIOR MEMORY ================= */
+/* ================= GLOBAL ================= */
+let FEED_CACHE = [];
 let scanHistory = [];
 
-/* ================= LOADER ================= */
-function showLoader(sec = 2) {
-  const loader = document.getElementById("loader");
-  const text = document.getElementById("loaderText");
-  const timer = document.getElementById("timer");
+/* ================= LOAD FEED ================= */
+async function loadFeed() {
+  try {
+    const res = await fetch(FEED_URL);
+    const data = await res.json();
+    FEED_CACHE = data.domains || [];
+    console.log("🌐 Feed Loaded:", FEED_CACHE.length);
+  } catch (e) {
+    console.warn("Feed load failed → using fallback");
+    FEED_CACHE = ["paypal-secure-login.com","google-alert-account.net"];
+  }
+}
+loadFeed();
 
-  loader.classList.remove("hidden");
-  text.classList.remove("hidden");
-
-  let t = sec;
-  timer.textContent = t;
-
-  const i = setInterval(() => {
-    t--;
-    timer.textContent = t;
-    if (t <= 0) clearInterval(i);
-  }, 1000);
+/* ================= GEO IP ================= */
+async function getGeo(ip = "") {
+  try {
+    const res = await fetch(`https://ipapi.co/${ip}/json/`);
+    return await res.json();
+  } catch {
+    return {};
+  }
 }
 
-function hideLoader() {
-  document.getElementById("loader").classList.add("hidden");
-  document.getElementById("loaderText").classList.add("hidden");
+/* ================= FINGERPRINT ================= */
+function getFingerprint() {
+  return {
+    ua: navigator.userAgent,
+    lang: navigator.language,
+    cores: navigator.hardwareConcurrency || 0,
+    screen: `${screen.width}x${screen.height}`,
+    platform: navigator.platform
+  };
 }
 
 /* ================= ENTROPY ================= */
@@ -229,12 +232,13 @@ function ruleEngine(urlStr) {
   const keywords = ["login","verify","secure","account","bank","update","password"];
   const brands = ["google","paypal","amazon","facebook","apple","microsoft"];
 
-  /* 🌐 OFFLINE FEED CHECK */
-  if (PHISHING_FEED.includes(h)) add("Threat Feed Match", 90);
+  /* 🌐 LIVE FEED */
+  if (FEED_CACHE.includes(h)) add("Live Threat Feed", 90);
 
   /* 🚨 CORE RULES */
   if (urlStr.includes("@")) add("@ Symbol", 60);
   if (/^(\d+\.){3}\d+$/.test(h)) add("IP Address", 50);
+
   if (keywords.some(k => urlStr.includes(k))) add("Phishing Keywords", 25);
 
   if (brands.some(b => urlStr.includes(b) && !h.includes(b)))
@@ -252,14 +256,11 @@ function ruleEngine(urlStr) {
 
   if (!urlStr.startsWith("https")) add("No HTTPS", 10);
 
-  /* 🧠 BEHAVIOR-BASED DETECTION */
-  const similar = scanHistory.filter(x => x.domain === h);
-  if (similar.length > 2) add("Repeated Suspicious Domain", 30);
+  /* 🧠 BEHAVIOR */
+  const repeat = scanHistory.filter(x => x.domain === h);
+  if (repeat.length > 2) add("Repeated Domain Behavior", 30);
 
-  return {
-    score: Math.min(score, 100) / 100,
-    breakdown
-  };
+  return { score: Math.min(score,100)/100, breakdown };
 }
 
 /* ================= GRAPH ================= */
@@ -273,79 +274,91 @@ function drawGraph(score) {
   }
 
   const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   canvas.width = 300;
   canvas.height = 120;
 
+  ctx.clearRect(0,0,300,120);
   ctx.strokeStyle = "#00e7ff";
   ctx.lineWidth = 2;
 
   ctx.beginPath();
-  for (let i = 0; i <= score; i++) {
-    const x = (i / 100) * 300;
-    const y = 120 - (i + Math.sin(i / 5) * 10);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  for (let i=0;i<=score;i++) {
+    const x = (i/100)*300;
+    const y = 120 - (i + Math.sin(i/5)*10);
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
   }
   ctx.stroke();
 }
 
+/* ================= LOADER ================= */
+function showLoader(sec=2){
+  document.getElementById("loader").classList.remove("hidden");
+}
+function hideLoader(){
+  document.getElementById("loader").classList.add("hidden");
+}
+
 /* ================= ANALYZE ================= */
-function analyze() {
+async function analyze(){
   let url = document.getElementById("urlInput").value.trim();
-  if (!url) return;
+  if(!url) return;
 
-  if (!url.startsWith("http")) url = "https://" + url;
+  if(!url.startsWith("http")) url="https://"+url;
 
-  showLoader(2);
+  showLoader();
 
-  setTimeout(() => {
-    const { score, breakdown } = ruleEngine(url);
+  const geo = await getGeo(); // user geo
+  const fp = getFingerprint();
 
-    // store behavior history
+  setTimeout(()=>{
+    const {score, breakdown} = ruleEngine(url);
+
     scanHistory.push({
       domain: new URL(url).hostname,
       score
     });
 
     hideLoader();
-    render(url, score, breakdown);
-  }, 1200);
+    render(url, score, breakdown, geo, fp);
+  },1000);
 }
 
 /* ================= OUTPUT ================= */
-function render(url, prob, breakdown) {
-  const r = Math.round(prob * 100);
+function render(url, prob, breakdown, geo, fp){
+  const r = Math.round(prob*100);
 
   const lvl =
-    r > 85 ? "CRITICAL" :
-    r > 65 ? "HIGH" :
-    r > 40 ? "MEDIUM" : "LOW";
+    r>85?"CRITICAL":
+    r>65?"HIGH":
+    r>40?"MEDIUM":"LOW";
 
   drawGraph(r);
 
-  let details = breakdown.map(b => `- ${b.name} (+${b.val})`).join("\n");
+  const details = breakdown.map(b=>`- ${b.name} (+${b.val})`).join("\n");
 
   document.getElementById("terminalOutput").textContent = `
 SCAN
-[+] Cyber Intelligence Scan v6
+[+] Cyber Intelligence Engine v7
 ----------------------------------------
 Target        : ${url}
 Risk Score    : ${r}%
 Threat Level  : ${lvl}
 ----------------------------------------
-Threat Intelligence:
-- Offline Feed Matching
-- Behavior Tracking
-- Entropy Analysis
-- Brand Spoof Detection
+Geo Info:
+- Country : ${geo.country_name || "Unknown"}
+- IP      : ${geo.ip || "N/A"}
+----------------------------------------
+Fingerprint:
+- Platform : ${fp.platform}
+- Screen   : ${fp.screen}
+- CPU      : ${fp.cores}
 ----------------------------------------
 Breakdown:
 ${details}
 ----------------------------------------
-> Verdict : ${r > 60 ? "PHISHING SUSPECTED" : "LIKELY SAFE"}
-> Engine  : CYBER AI (RULE + BEHAVIOR + FEED)`;
+> Verdict : ${r>60?"PHISHING SUSPECTED":"LIKELY SAFE"}
+> Engine  : LIVE FEED + BEHAVIOR + FINGERPRINT`;
 
   document.getElementById("result").classList.remove("hidden");
 }
