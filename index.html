@@ -186,8 +186,34 @@ pre {
     Do not use it for unauthorized or malicious activities.
   </p>
 </footer>
+  <div id="toast" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #020617;
+  border: 1px solid #00e7ff;
+  color: #00e7ff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 9999;
+"></div>
 
 <script>
+  function showToast(msg, success = true) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.borderColor = success ? "#00e7ff" : "#ff4d4d";
+  t.style.color = success ? "#00e7ff" : "#ff4d4d";
+
+  t.style.opacity = "1";
+
+  setTimeout(() => {
+    t.style.opacity = "0";
+  }, 3000);
+}
 /* ================= CONFIG ================= */
 const FEED_URL = "https://raw.githubusercontent.com/tirthbhatt21/malicious-url-detector/24cffc26d78342d7e636cb4efcda2f56577f9a82/feed.json";
 let FEED_CACHE = [];
@@ -199,10 +225,15 @@ async function loadFeed() {
     const res = await fetch(FEED_URL);
     const data = await res.json();
     FEED_CACHE = data.domains || [];
+
     console.log("🌐 Feed Loaded:", FEED_CACHE.length);
+    showToast(`Feed Loaded (${FEED_CACHE.length} domains) ✅`, true);
+
   } catch (e) {
     console.warn("Feed load failed → using fallback");
     FEED_CACHE = ["paypal-secure-login.com","google-alert-account.net"];
+
+    showToast("Feed Load Failed ❌ Using fallback", false);
   }
 }
 loadFeed();
@@ -435,7 +466,7 @@ async function analyze(){
   setTimeout(()=>{
     const {score, breakdown} = ruleEngine(url);
     scanHistory.push({ domain: new URL(url).hostname, score });
-    hideLoader(); render(url, score, breakdown, geo, fp);
+    hideLoader();render(url, finalScore, breakdown, geo, fp, phish);
   },1000);
 }
 
@@ -478,7 +509,11 @@ async function analyze(){
   const domain = new URL(url).hostname.toLowerCase();
 
   // DNS & heuristic checks
-  const [dns, heuristic] = await Promise.all([dnsCheck(domain), domainHeuristics(domain)]);
+  const [dns, heuristic, phish] = await Promise.all([
+  dnsCheck(domain),
+  domainHeuristics(domain),
+  checkPhishTank(url)
+]);
 
   setTimeout(()=>{
     const {score, breakdown} = ruleEngine(url);
@@ -496,12 +531,38 @@ async function analyze(){
     scanHistory.push({ domain, score: finalScore });
 
     hideLoader();
-    render(url, finalScore, breakdown, geo, fp);
+    render(url, finalScore, breakdown, geo, fp, phish);
   },1000);
 }
 
+  /* ================= phishtank ================= */
+async function checkPhishTank(url) {
+  try {
+    const res = await fetch("https://checkurl.phishtank.com/checkurl/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        url: url,
+        format: "json"
+      })
+    });
+
+    const data = await res.json();
+
+    return {
+      inDatabase: data?.results?.in_database || false,
+      verified: data?.results?.verified || false
+    };
+
+  } catch (e) {
+    console.warn("PhishTank API failed");
+    return { inDatabase: false, verified: false };
+  }
+}
 /* ================= OUTPUT ================= */
-function render(url, prob, breakdown, geo, fp){
+render(url, finalScore, breakdown, geo, fp, phish);{
   let r = Math.round(prob*100);
 
   // Clamp to 100%
@@ -516,6 +577,21 @@ function render(url, prob, breakdown, geo, fp){
   const details = breakdown.map(b=>`- ${b.name} (+${b.val})`).join("\n");
   document.getElementById("terminalOutput").textContent = `
 
+const phishStatus = phish?.inDatabase
+  ? (phish.verified ? "⚠️ VERIFIED PHISHING (PhishTank)" : "⚠️ Suspicious (PhishTank)")
+  : "✅ Not listed in PhishTank";
+
+const engineList = [
+  "LIVE FEED",
+  "BEHAVIOR",
+  "FINGERPRINT",
+  "DNS",
+  "HEURISTIC",
+  "PHISHTANK"
+].join(" + ");
+
+document.getElementById("terminalOutput").textContent = `
+
 [+] Cyber Intelligence Engine v1
 ----------------------------------------
 Target        : ${url}
@@ -526,6 +602,10 @@ Breakdown:
 ${details}
 ----------------------------------------
 
+🌐 THREAT INTEL
+----------------------------------------
+PhishTank      : ${phishStatus}
+----------------------------------------
 
 USER INFO!
 ----------------------------------------
@@ -548,19 +628,24 @@ Fingerprint-
 - CPU      : ${fp.cores}
 ----------------------------------------
 
-
 SYSTEM INFO!
 ----------------------------------------
-> Verdict : ${r>60?"PHISHING SUSPECTED":"LIKELY SAFE"}
-> Engine  : LIVE FEED + BEHAVIOR + FINGERPRINT
+> Verdict : ${
+  r > 80
+    ? "🚨 DEFINITE PHISHING"
+    : r > 60
+    ? "⚠️ PHISHING SUSPECTED"
+    : r > 40
+    ? "🟡 SUSPICIOUS"
+    : "✅ LIKELY SAFE"
+}
+> Engine  : ${engineList}
     
 📡 SYSTEM STATUS
 ----------------------------------------
 Engine : ACTIVE
-Mode   : CYBER v1`;
-
-  document.getElementById("result").classList.remove("hidden");
-}
+Mode   : CYBER v2 (LIVE INTEL)
+`;
 </script>
 </body>
 </html>
