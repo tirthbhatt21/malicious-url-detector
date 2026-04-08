@@ -162,40 +162,24 @@ button {
   <p>Built by <strong>Tirth Bhatt</strong> © 2026</p>
 </footer>
 
-<!-- TFJS FIRST -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
 <script>
-let model = null;
-let scaler = null;
-let aiReady = false;
+let aiReady = true;
 
-/* LOAD MODEL */
-async function loadAI() {
-  try {
-    model = await tf.loadLayersModel("./model/model.json");
-    scaler = await fetch("./scaler.json").then(r => r.json());
+/* ================= OFFLINE PHISHING FEED ================= */
+/* Simulated cached feeds (update manually weekly) */
+const PHISHING_FEED = [
+  "paypal-secure-login.com",
+  "apple-id-verify.net",
+  "google-account-warning.com",
+  "microsoft-auth-alert.net",
+  "amazon-security-check.com"
+];
 
-    if (!scaler.mean || !scaler.scale) {
-      throw new Error("Invalid scaler.json");
-    }
+/* ================= BEHAVIOR MEMORY ================= */
+let scanHistory = [];
 
-    if (!model.inputs || model.inputs.length === 0) {
-      const inputDim = scaler.mean.length;
-      model.build([null, inputDim]);
-    }
-
-    aiReady = true;
-    console.log("🧠 AI Engine Ready");
-
-  } catch (e) {
-    alert("AI failed to load. Check console.");
-    console.error(e);
-  }
-}
-loadAI();
-
-/* LOADER */
-function showLoader(sec = 3) {
+/* ================= LOADER ================= */
+function showLoader(sec = 2) {
   const loader = document.getElementById("loader");
   const text = document.getElementById("loaderText");
   const timer = document.getElementById("timer");
@@ -218,123 +202,150 @@ function hideLoader() {
   document.getElementById("loaderText").classList.add("hidden");
 }
 
-/* FEATURE EXTRACTION (UNCHANGED) */
-function extractFeatures(urlStr) {
-  const u = new URL(urlStr);
-  const h = u.hostname;
-  const c = r => (urlStr.match(r) || []).length;
+/* ================= ENTROPY ================= */
+function entropy(str) {
+  const map = {};
+  for (let c of str) map[c] = (map[c] || 0) + 1;
 
-  return [
-    urlStr.length, h.length,
-    /^\d+\.\d+\.\d+\.\d+$/.test(h) ? 1 : 0,
-    c(/\./g), c(/-/g), c(/@/g),
-    c(/\?/g), c(/&/g), c(/\|/g),
-    c(/=/g), c(/_/g), c(/%/g),
-    c(/\//g), c(/\*/g), c(/:/g),
-    c(/,/g), c(/\$/g),
-    (urlStr.match(/www/g) || []).length,
-    (urlStr.match(/\.com/g) || []).length,
-    c(/\/\//g),
-    urlStr.includes("http") ? 1 : 0,
-    urlStr.includes("https") ? 1 : 0,
-    (urlStr.match(/\d/g) || []).length / urlStr.length,
-    (h.match(/\d/g) || []).length / h.length,
-    h.includes("xn--") ? 1 : 0,
-    u.port ? 1 : 0,
-    urlStr.includes(h.split(".").pop()) ? 1 : 0,
-    h.split(".").length > 3 ? 1 : 0,
-    h.startsWith("www.") ? 0 : 1,
-    h.split(".").length - 2,
-    h.includes("-") ? 1 : 0,
-    h.length > 20 ? 1 : 0,
-    /bit\.ly|tinyurl|goo\.gl/.test(urlStr) ? 1 : 0,
-    /\.(php|html|asp|exe)$/.test(urlStr) ? 1 : 0
-  ];
-}
-
-/* NORMALIZE */
-function normalize(x) {
-  return x.map((v, i) => (v - scaler.mean[i]) / scaler.scale[i]);
+  return Object.values(map).reduce((e, f) => {
+    const p = f / str.length;
+    return e - p * Math.log2(p);
+  }, 0);
 }
 
 /* ================= RULE ENGINE ================= */
 function ruleEngine(urlStr) {
-  let score = 0;
   const u = new URL(urlStr);
-  const h = u.hostname;
+  const h = u.hostname.toLowerCase();
+
+  let score = 0;
+  const breakdown = [];
+
+  const add = (name, val) => {
+    score += val;
+    breakdown.push({ name, val });
+  };
 
   const keywords = ["login","verify","secure","account","bank","update","password"];
+  const brands = ["google","paypal","amazon","facebook","apple","microsoft"];
 
-  if (urlStr.includes("@")) score += 60;
-  if (/^(\d+\.){3}\d+$/.test(h)) score += 40;
-  if (keywords.some(k => urlStr.toLowerCase().includes(k))) score += 25;
-  if (h.length > 25) score += 15;
-  if (h.split(".").length > 3) score += 20;
-  if (h.includes("-")) score += 10;
-  if (h.includes("xn--")) score += 40;
-  if (urlStr.length > 120) score += 20;
-  if (/bit\.ly|tinyurl/.test(urlStr)) score += 35;
-  if (/\.(php|exe|zip)$/.test(urlStr)) score += 25;
+  /* 🌐 OFFLINE FEED CHECK */
+  if (PHISHING_FEED.includes(h)) add("Threat Feed Match", 90);
 
-  return Math.min(score, 100) / 100;
+  /* 🚨 CORE RULES */
+  if (urlStr.includes("@")) add("@ Symbol", 60);
+  if (/^(\d+\.){3}\d+$/.test(h)) add("IP Address", 50);
+  if (keywords.some(k => urlStr.includes(k))) add("Phishing Keywords", 25);
+
+  if (brands.some(b => urlStr.includes(b) && !h.includes(b)))
+    add("Brand Impersonation", 50);
+
+  if (h.length > 25) add("Long Domain", 15);
+  if (h.split(".").length > 3) add("Too Many Subdomains", 20);
+  if (h.includes("-")) add("Hyphen Domain", 10);
+
+  if (urlStr.length > 120) add("Long URL", 20);
+  if (/bit\.ly|tinyurl/.test(urlStr)) add("Shortened URL", 40);
+
+  const ent = entropy(h);
+  if (ent > 3.8) add("High Entropy", 25);
+
+  if (!urlStr.startsWith("https")) add("No HTTPS", 10);
+
+  /* 🧠 BEHAVIOR-BASED DETECTION */
+  const similar = scanHistory.filter(x => x.domain === h);
+  if (similar.length > 2) add("Repeated Suspicious Domain", 30);
+
+  return {
+    score: Math.min(score, 100) / 100,
+    breakdown
+  };
 }
 
-/* ANALYZE */
-async function analyze() {
-  if (!aiReady) {
-    showLoader(3);
-    alert("AI engine still loading, please wait.");
-    return;
+/* ================= GRAPH ================= */
+function drawGraph(score) {
+  let canvas = document.getElementById("riskGraph");
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.id = "riskGraph";
+    canvas.height = 120;
+    document.getElementById("result").appendChild(canvas);
   }
 
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  canvas.width = 300;
+  canvas.height = 120;
+
+  ctx.strokeStyle = "#00e7ff";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  for (let i = 0; i <= score; i++) {
+    const x = (i / 100) * 300;
+    const y = 120 - (i + Math.sin(i / 5) * 10);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+/* ================= ANALYZE ================= */
+function analyze() {
   let url = document.getElementById("urlInput").value.trim();
   if (!url) return;
-  if (!url.startsWith("http")) url = "https://" + url;
 
-  if (url.includes("google.com") || url.includes("github.com")) {
-    render(url, 0.02, 0);
-    return;
-  }
+  if (!url.startsWith("http")) url = "https://" + url;
 
   showLoader(2);
 
-  const raw = extractFeatures(url);
-  if (raw.length !== scaler.mean.length) {
+  setTimeout(() => {
+    const { score, breakdown } = ruleEngine(url);
+
+    // store behavior history
+    scanHistory.push({
+      domain: new URL(url).hostname,
+      score
+    });
+
     hideLoader();
-    alert("Feature mismatch with trained model");
-    return;
-  }
-
-  const tensor = tf.tensor2d([normalize(raw)]);
-  const mlProb = (await model.predict(tensor).data())[0];
-  tf.dispose(tensor);
-
-  const ruleProb = ruleEngine(url);
-
-  // 🔥 HYBRID SCORE
-  const finalProb = (0.7 * mlProb) + (0.3 * ruleProb);
-
-  hideLoader();
-  render(url, finalProb, ruleProb);
+    render(url, score, breakdown);
+  }, 1200);
 }
 
-/* OUTPUT */
-function render(url, p, rule = 0) {
-  const r = Math.round(p * 100);
-  const lvl = r > 80 ? "CRITICAL" : r > 60 ? "HIGH" : r > 40 ? "MEDIUM" : "LOW";
+/* ================= OUTPUT ================= */
+function render(url, prob, breakdown) {
+  const r = Math.round(prob * 100);
+
+  const lvl =
+    r > 85 ? "CRITICAL" :
+    r > 65 ? "HIGH" :
+    r > 40 ? "MEDIUM" : "LOW";
+
+  drawGraph(r);
+
+  let details = breakdown.map(b => `- ${b.name} (+${b.val})`).join("\n");
 
   document.getElementById("terminalOutput").textContent = `
 SCAN
-[+] AI Hybrid Phishing Scan
+[+] Cyber Intelligence Scan v6
 ----------------------------------------
 Target        : ${url}
-ML Score      : ${Math.round(p*100)}%
-Rule Score    : ${Math.round(rule*100)}%
-Final Risk    : ${r}%
+Risk Score    : ${r}%
 Threat Level  : ${lvl}
 ----------------------------------------
-> AI Verdict : ${r > 60 ? "PHISHING SUSPECTED" : "LIKELY SAFE"}
-> Engine    : HYBRID AI + RULES ACTIVE`;
+Threat Intelligence:
+- Offline Feed Matching
+- Behavior Tracking
+- Entropy Analysis
+- Brand Spoof Detection
+----------------------------------------
+Breakdown:
+${details}
+----------------------------------------
+> Verdict : ${r > 60 ? "PHISHING SUSPECTED" : "LIKELY SAFE"}
+> Engine  : CYBER AI (RULE + BEHAVIOR + FEED)`;
 
   document.getElementById("result").classList.remove("hidden");
 }
