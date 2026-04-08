@@ -562,33 +562,34 @@ async function checkPhishTank(url) {
   }
 }
 /* ================= OUTPUT ================= */
-render(url, finalScore, breakdown, geo, fp, phish);{
-  let r = Math.round(prob*100);
-
-  // Clamp to 100%
-  if(r > 100) r = 100;
+function render(url, finalScore, breakdown, geo, fp, phish) {
+  // Round and clamp the score
+  let r = Math.round(finalScore * 100);
+  if (r > 100) r = 100;
 
   const lvl =
-    r>85?"CRITICAL":
-    r>65?"HIGH":
-    r>40?"MEDIUM":"LOW";
+    r > 85 ? "CRITICAL" :
+    r > 65 ? "HIGH" :
+    r > 40 ? "MEDIUM" : "LOW";
 
   drawGraph(r);
-  const details = breakdown.map(b=>`- ${b.name} (+${b.val})`).join("\n");
- const phishStatus = phish?.inDatabase
-  ? (phish.verified ? "⚠️ VERIFIED PHISHING (PhishTank)" : "⚠️ Suspicious (PhishTank)")
-  : "✅ Not listed in PhishTank";
 
-const engineList = [
-  "LIVE FEED",
-  "BEHAVIOR",
-  "FINGERPRINT",
-  "DNS",
-  "HEURISTIC",
-  "PHISHTANK"
-].join(" + ");
+  const details = breakdown.map(b => `- ${b.name} (+${b.val})`).join("\n");
 
-document.getElementById("terminalOutput").textContent = `
+  const phishStatus = phish?.inDatabase
+    ? (phish.verified ? "⚠️ VERIFIED PHISHING (PhishTank)" : "⚠️ Suspicious (PhishTank)")
+    : "✅ Not listed in PhishTank";
+
+  const engineList = [
+    "LIVE FEED",
+    "BEHAVIOR",
+    "FINGERPRINT",
+    "DNS",
+    "HEURISTIC",
+    "PHISHTANK"
+  ].join(" + ");
+
+  document.getElementById("terminalOutput").textContent = `
 
 [+] Cyber Intelligence Engine v1
 ----------------------------------------
@@ -629,13 +630,9 @@ Fingerprint-
 SYSTEM INFO!
 ----------------------------------------
 > Verdict : ${
-  r > 80
-    ? "🚨 DEFINITE PHISHING"
-    : r > 60
-    ? "⚠️ PHISHING SUSPECTED"
-    : r > 40
-    ? "🟡 SUSPICIOUS"
-    : "✅ LIKELY SAFE"
+  r > 80 ? "🚨 DEFINITE PHISHING" :
+  r > 60 ? "⚠️ PHISHING SUSPECTED" :
+  r > 40 ? "🟡 SUSPICIOUS" : "✅ LIKELY SAFE"
 }
 > Engine  : ${engineList}
     
@@ -644,6 +641,10 @@ SYSTEM INFO!
 Engine : ACTIVE
 Mode   : CYBER v2 (LIVE INTEL)
 `;
+
+  // Show result card
+  document.getElementById("result").classList.remove("hidden");
+}
 </script>
 </body>
 </html>
