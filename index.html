@@ -575,9 +575,7 @@ render(url, finalScore, breakdown, geo, fp, phish);{
 
   drawGraph(r);
   const details = breakdown.map(b=>`- ${b.name} (+${b.val})`).join("\n");
-  document.getElementById("terminalOutput").textContent = `
-
-const phishStatus = phish?.inDatabase
+ const phishStatus = phish?.inDatabase
   ? (phish.verified ? "⚠️ VERIFIED PHISHING (PhishTank)" : "⚠️ Suspicious (PhishTank)")
   : "✅ Not listed in PhishTank";
 
