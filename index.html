@@ -24,7 +24,7 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #04131a, #020617 60%);
+  background: radial-gradient(circle at top, #00121a, #050a21 50%)
   color: var(--cyber);
   overflow-x: hidden;
 }
@@ -178,14 +178,19 @@ pre {
   </div>
 </main>
 
+<!-- Footer -->
 <footer class="footer">
-  <p>phishing detection</p>
+  <p>🖥 Phishing Detection Tool</p>
   <p>Built by <strong>Tirth Bhatt</strong> © 2026</p>
-  <p style="font-size:11px; color:#7dd3fc; margin-top:8px;">
-    ⚠️ Disclaimer: This tool is for educational and research purposes only. 
-    Do not use it for unauthorized or malicious activities.
-  </p>
+  <pre style="font-size:11px; color:#7dd3fc; margin-top:8px;">
+⚠️ DISCLAIMER
+> For educational & research purposes only
+> No personal data is collected
+> Analyses use publicly available threat intelligence
+> Unauthorized or malicious use is strictly prohibited
+  </pre>
 </footer>
+  
   <div id="toast" style="
   position: fixed;
   bottom: 20px;
@@ -563,8 +568,8 @@ function render(url, finalScore, breakdown, geo, fp, phish) {
   const details = breakdown.map(b => `- ${b.name} (+${b.val})`).join("\n");
 
   const phishStatus = phish?.inDatabase
-    ? (phish.verified ? "⚠️ VERIFIED PHISHING (PhishTank)" : "⚠️ Suspicious (PhishTank)")
-    : "✅ Not listed in PhishTank";
+    ? (phish.verified ? "VERIFIED PHISHING (PhishTank)" : "Suspicious (PhishTank)")
+    : "Not listed in PhishTank";
 
   const engineList = [
     "LIVE FEED",
@@ -582,6 +587,11 @@ function render(url, finalScore, breakdown, geo, fp, phish) {
 Target        : ${url}
 Risk Score    : ${r}%
 Threat Level  : ${lvl}
+> Verdict : ${
+  r > 80 ? "DEFINITE PHISHING" :
+  r > 60 ? "PHISHING SUSPECTED" :
+  r > 40 ? "SUSPICIOUS" : "LIKELY SAFE"
+}
 ----------------------------------------
 Breakdown:
 ${details}
@@ -615,12 +625,9 @@ Fingerprint-
 
 SYSTEM INFO!
 ----------------------------------------
-> Verdict : ${
-  r > 80 ? "🚨 DEFINITE PHISHING" :
-  r > 60 ? "⚠️ PHISHING SUSPECTED" :
-  r > 40 ? "🟡 SUSPICIOUS" : "✅ LIKELY SAFE"
-}
 > Engine  : ${engineList}
+----------------------------------------
+
     
 📡 SYSTEM STATUS
 ----------------------------------------
