@@ -134,7 +134,7 @@ button {
 
 <header class="top-bar">
   <h1>🛡 AI CYBER URL ANALYZER</h1>
-  <p>> Advanced Phishing Detection Engine v4.0</p>
+  <p>> Advanced Phishing Detection Engine v1.0</p>
 </header>
 
 <main class="container">
@@ -164,7 +164,7 @@ button {
 
 <script>
 /* ================= CONFIG ================= */
-const FEED_URL = "https://raw.githubusercontent.com/tirthbhatt21/malicious-url-detector/main/feed.json";
+const FEED_URL = "https://github.com/tirthbhatt21/malicious-url-detector/blob/24cffc26d78342d7e636cb4efcda2f56577f9a82/feed.json";
 
 /* ================= GLOBAL ================= */
 let FEED_CACHE = [];
@@ -338,12 +338,15 @@ function render(url, prob, breakdown, geo, fp){
   const details = breakdown.map(b=>`- ${b.name} (+${b.val})`).join("\n");
 
   document.getElementById("terminalOutput").textContent = `
-SCAN
-[+] Cyber Intelligence Engine v7
+
+[+] Cyber Intelligence Engine v1
 ----------------------------------------
 Target        : ${url}
 Risk Score    : ${r}%
 Threat Level  : ${lvl}
+----------------------------------------
+Breakdown:
+${details}
 ----------------------------------------
 Geo Info:
 - Country : ${geo.country_name || "Unknown"}
@@ -354,11 +357,14 @@ Fingerprint:
 - Screen   : ${fp.screen}
 - CPU      : ${fp.cores}
 ----------------------------------------
-Breakdown:
-${details}
-----------------------------------------
 > Verdict : ${r>60?"PHISHING SUSPECTED":"LIKELY SAFE"}
-> Engine  : LIVE FEED + BEHAVIOR + FINGERPRINT`;
+> Engine  : LIVE FEED + BEHAVIOR + FINGERPRINT`
+    
+📡 SYSTEM STATUS
+----------------------------------------
+Engine : ACTIVE
+Mode   : CYBER v1
+`;
 
   document.getElementById("result").classList.remove("hidden");
 }
