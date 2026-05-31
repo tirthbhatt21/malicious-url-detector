@@ -1,8 +1,8 @@
 # 🛡 AI Cyber URL Analyzer
 
-An advanced **client-side phishing detection system** that analyzes URLs using a **trained TensorFlow.js machine learning model** combined with cybersecurity heuristics.
+An advanced **client-side phishing detection system** that analyzes URLs using a **multi-layer rule engine**, threat intelligence feeds, DNS checks, and cybersecurity heuristics.
 
-The entire project runs **fully in the browser** and is optimized for **static hosting on GitHub Pages**.
+The entire system runs **fully in the browser** and is designed for **static hosting on GitHub Pages**.
 
 ---
 
@@ -14,44 +14,43 @@ The entire project runs **fully in the browser** and is optimized for **static h
 
 ## 🔍 Features
 
-✔ Real trained Machine Learning model (TensorFlow.js)  
-✔ URL structure and syntax analysis  
-✔ IP-based URL detection  
-✔ Suspicious character frequency detection  
-✔ Digit ratio and entropy analysis  
-✔ Subdomain anomaly detection  
-✔ URL shortening service detection  
-✔ Risky extension detection (`.php`, `.exe`, etc.)  
-✔ ML-based phishing probability scoring  
-✔ Threat classification (LOW / MEDIUM / HIGH / CRITICAL)  
-✔ Terminal-style cyber output UI  
-
-All analysis is performed **entirely inside the browser**.
+✔ Live malicious domain feed (GitHub-hosted JSON intelligence list)  
+✔ Rule-based phishing detection engine  
+✔ DNS resolution anomaly checks (Google DNS API)  
+✔ PhishTank integration for known phishing URLs  
+✔ URL entropy analysis (randomness detection)  
+✔ Brand impersonation detection (Google, PayPal, Amazon, etc.)  
+✔ Levenshtein distance-based spoof detection  
+✔ Suspicious keyword detection (login, verify, password, bank, etc.)  
+✔ URL shortener detection (bit.ly, tinyurl)  
+✔ Risky TLD detection (.xyz, .top, .site, etc.)  
+✔ Browser fingerprint collection (non-invasive metadata only)  
+✔ Risk scoring engine (0–100%)  
+✔ Cyber-themed terminal output UI  
+✔ Risk visualization graph (Canvas-based)  
+✔ Scan history tracking (session-based)
 
 ---
 
-## 🧠 AI Model Overview
+## 🧠 Detection Architecture
 
-- Trained on phishing detection datasets
-- Converted from Keras to TensorFlow.js
-- Uses feature normalization (`scaler.json`)
-- No backend inference required
-- No API calls or external services
-
-### Detection Pipeline
-
-
-User URL<br>
-↓
-<br>Feature Extraction (Structural Signals)<br>
-↓
-<br>Normalization (scaler.json)<br>
-↓
-<br>TensorFlow.js Model<br>
-↓
-<br>Risk Probability<br>
-↓
-<br>Threat Level Classification
+User URL Input  
+↓  
+URL Parsing & Normalization  
+↓  
+Rule Engine (keywords, brand spoofing, structure checks)  
+↓  
+Threat Intelligence Feed Check  
+↓  
+DNS Resolution Check (Google DNS)  
+↓  
+PhishTank Lookup  
+↓  
+Entropy + Heuristic Scoring  
+↓  
+Final Risk Score (0–100)  
+↓  
+Graphical Visualization + Terminal Output
 
 
 ---
@@ -59,75 +58,59 @@ User URL<br>
 ## ⚙️ Tech Stack
 
 - HTML5
-- CSS3 (Cyber / Hacker UI Theme)
+- CSS3 (Cyberpunk / terminal UI theme)
 - Vanilla JavaScript
-- TensorFlow.js
-- GitHub Pages (Static Hosting)
+- Canvas API (risk graph visualization)
+- Google DNS API
+- GitHub Pages (static hosting)
+- GitHub (version control & hosting)
 
 ---
 
 ## 🔐 Why Client-Side Only?
 
-This architecture ensures:
-
-- 🔒 No API keys exposed
-- 💰 Zero backend or server cost
-- ⚡ Instant real-time analysis
-- 🌍 Fully static & portable deployment
-- 🚫 No CORS or network dependency
-- 🧪 Ideal for portfolio & research
+- No backend required  
+- Zero server cost  
+- Instant analysis  
+- Fully static deployment  
+- No API keys needed  
+- Easy GitHub Pages hosting  
+- Ideal for cybersecurity demos  
 
 ---
 
 ## ⚠️ Limitations
 
-Due to the **static, client-side nature** of the project, the following are intentionally **not included**:
+This tool does NOT include:
 
-- ❌ WHOIS domain age lookup
-- ❌ DNS reputation checks
-- ❌ VirusTotal or blacklist APIs
-- ❌ Real-time threat feeds
-- ❌ Backend-based retraining
-- ❌ Server-side validation
+- WHOIS domain age lookup  
+- VirusTotal or commercial threat APIs  
+- Real-time malware sandboxing  
+- Backend machine learning inference  
+- Continuous threat intelligence streaming  
 
-This tool focuses on **structural and statistical URL intelligence**, not live reputation services.
+It focuses on **heuristic + DNS + reputation-based browser intelligence**.
 
 ---
 
 ## 🧪 Intended Use
 
-This project is suitable for:
-
-- Cybersecurity portfolio demonstrations
-- Frontend machine learning showcases
-- Educational phishing research
-- Browser-based AI experimentation
-- GitHub Pages–friendly AI projects
-
----
-
-## 📁 Project Structure
-
-
-<br>├── index.html
-<br>├── scaler.json
-<br>├── /model
-<br>│&nbsp;&nbsp;&nbsp;&nbsp;   ├── model.json
-<br>│&nbsp;&nbsp;&nbsp;&nbsp;   └── group1-shard1of1.bin
+- Cybersecurity learning projects  
+- Frontend security tool demos  
+- Phishing research experiments  
+- Portfolio projects  
+- GitHub Pages deployments  
 
 ---
 
 ## 🧑‍💻 Author
 
 **Tirth Bhatt**  
-🌐 Portfolio: https://tirth-bhatt-developer.web.app/  
+🌐 Portfolio: https://tirthbhatt-developer.web.app/  
 💻 GitHub: https://github.com/tirthbhatt21  
 
 ---
 
 ## 📜 Disclaimer
 
-This tool provides **probabilistic phishing detection** based on machine learning and heuristic analysis.  
-It does **not guarantee absolute security**.
-
-Always verify suspicious URLs using trusted security platforms and official sources.
+This tool provides **probabilistic phishing risk scoring** using heuristics and public signals.
