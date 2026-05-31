@@ -69,7 +69,7 @@ body::after {
 .card {
   background: linear-gradient(
     180deg,
-    rgba(0, 231, 255, 0.03),
+    rgb(0, 0, 0),
     rgba(0, 0, 0, 0.3)
   );
   border: 1px solid var(--border);
@@ -148,6 +148,42 @@ pre {
     width: 100%;
   }
 }
+
+
+
+
+#riskGraph {
+  border: 4px solid #ffffff;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 0 15px #00e7ff33;
+  background: #020617;
+  width: 520px;
+  height: 220px;
+  display: block;
+  margin: auto;
+}
+
+/* ================= MOBILE VIEW ================= */
+@media (max-width: 768px) {
+  #riskGraph {
+    width: 100%;
+    height: 180px;
+    border: 2px solid #ffffff;
+    border-radius: 6px;
+    padding: 6px;
+    box-shadow: 0 0 10px #00e7ff22;
+  }
+}
+
+/* ================= SMALL MOBILE ================= */
+@media (max-width: 480px) {
+  #riskGraph {
+    height: 160px;
+    border: 2px solid #ffffff;
+    padding: 5px;
+  }
+}
   </style>
 </head>
 
@@ -206,7 +242,349 @@ pre {
   z-index: 9999;
 "></div>
 
+
+
+
+
+
+
 <script>
+/* ================= TOAST ================= */
+function showToast(msg, success = true) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.borderColor = success ? "#00e7ff" : "#ff4d4d";
+  t.style.color = success ? "#00e7ff" : "#ff4d4d";
+  t.style.opacity = "1";
+  setTimeout(() => (t.style.opacity = "0"), 3000);
+}
+
+/* ================= CONFIG ================= */
+const FEED_URL =
+  "https://raw.githubusercontent.com/tirthbhatt21/malicious-url-detector/24cffc26d78342d7e636cb4efcda2f56577f9a82/feed.json";
+
+let FEED_CACHE = { domains: [], lastUpdated: 0 };
+let scanHistory = [];
+
+/* ================= LOAD FEED (TTL CACHE) ================= */
+async function loadFeed() {
+  const now = Date.now();
+
+  if (now - FEED_CACHE.lastUpdated < 15 * 60 * 1000) return;
+
+  try {
+    const res = await fetch(FEED_URL);
+    const data = await res.json();
+
+    FEED_CACHE = {
+      domains: data.domains || [],
+      lastUpdated: now
+    };
+
+    showToast(`Feed Loaded (${FEED_CACHE.domains.length})`, true);
+  } catch {
+    FEED_CACHE.domains = ["paypal-secure-login.com"];
+    showToast("Feed fallback active", false);
+  }
+}
+
+loadFeed();
+
+/* ================= SAFE URL PARSE ================= */
+function safeURL(urlStr) {
+  try {
+    return new URL(urlStr);
+  } catch {
+    return null;
+  }
+}
+
+
+/* ================= FINGERPRINT ================= */
+function getFingerprint() {
+  return {
+    ua: navigator.userAgent,
+    lang: navigator.language,
+    cores: navigator.hardwareConcurrency || 0,
+    screen: `${screen.width}x${screen.height}`,
+    platform: navigator.platform
+  };
+}
+
+/* ================= ENTROPY ================= */
+function entropy(str) {
+  const map = {};
+  for (let c of str) map[c] = (map[c] || 0) + 1;
+
+  return Object.values(map).reduce((e, f) => {
+    const p = f / str.length;
+    return e - p * Math.log2(p);
+  }, 0);
+}
+
+/* ================= LEVENSHTEIN ================= */
+function levenshtein(a, b) {
+  const m = Array.from({ length: b.length + 1 }, () => []);
+  for (let i = 0; i <= b.length; i++) m[i][0] = i;
+  for (let j = 0; j <= a.length; j++) m[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      m[i][j] =
+        b[i - 1] === a[j - 1]
+          ? m[i - 1][j - 1]
+          : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+    }
+  }
+  return m[b.length][a.length];
+}
+
+/* ================= DETECTORS ================= */
+function runDetectors(urlStr, domain) {
+  const signals = [];
+
+  const keywords = ["login","verify","secure","account","bank","update","password"];
+  const brands = ["google","paypal","amazon","facebook","apple","microsoft"];
+
+  if (FEED_CACHE.domains.includes(domain)) {
+    signals.push({ name: "Live Threat Feed", score: 100 });
+  }
+
+  if (keywords.some(k => urlStr.includes(k))) {
+    signals.push({ name: "Phishing Keywords", score: 70 });
+  }
+
+  if (brands.some(b => urlStr.includes(b) && !domain.includes(b))) {
+    signals.push({ name: "Brand Impersonation", score: 85 });
+  }
+
+  if (urlStr.includes("@")) signals.push({ name: "@ Symbol", score: 90 });
+
+  if (/bit\.ly|tinyurl/.test(urlStr)) {
+    signals.push({ name: "Shortened URL", score: 60 });
+  }
+
+  if (entropy(domain) > 3.8) {
+    signals.push({ name: "High Entropy Domain", score: 65 });
+  }
+
+  if (domain.length > 25) {
+    signals.push({ name: "Long Domain", score: 40 });
+  }
+
+  return signals;
+}
+
+/* ================= SCORE ENGINE ================= */
+function computeScore(signals) {
+  if (!signals.length) return 10;
+
+  const max = signals.length * 100;
+  const sum = signals.reduce((a, s) => a + s.score, 0);
+
+  return Math.min(Math.round((sum / max) * 100), 100);
+}
+
+/* ================= GRAPH (FIXED) ================= */
+function drawGraph(score) {
+  let canvas = document.getElementById("riskGraph");
+
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.id = "riskGraph";
+    document.getElementById("result").appendChild(canvas);
+  }
+
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = 520;
+  canvas.height = 220;
+
+  // background
+  ctx.fillStyle = "#020617";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // grid style
+  ctx.strokeStyle = "#0f2a33";
+  ctx.lineWidth = 1;
+
+  // horizontal grid (20% steps)
+  for (let i = 0; i <= 5; i++) {
+    const y = (canvas.height / 5) * i;
+
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+
+    // left labels (100% → 0%)
+    ctx.fillStyle = "#7dd3fc";
+    ctx.font = "11px monospace";
+    ctx.fillText(`${100 - i * 20}%`, 5, y + 12);
+  }
+
+  // vertical grid
+  for (let i = 0; i <= 10; i++) {
+    const x = (canvas.width / 10) * i;
+
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+
+  // main risk dot position
+  const x = canvas.width - 20;
+  const y = canvas.height - (score / 100) * canvas.height;
+
+  // glow effect for dot
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = "#ff4d4d";
+
+  ctx.fillStyle = "#ff4d4d";
+  ctx.beginPath();
+  ctx.arc(x, y, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // reset glow
+  ctx.shadowBlur = 0;
+
+  // score label (top right like your image)
+  ctx.fillStyle = "#ff4d4d";
+  ctx.font = "bold 14px monospace";
+  ctx.fillText(`${score}%`, canvas.width - 60, 18);
+
+  // subtle crosshair line to dot
+  ctx.strokeStyle = "#ff4d4d";
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/* ================= DNS ================= */
+async function dnsCheck(domain) {
+  try {
+    const res = await fetch(`https://dns.google/resolve?name=${domain}`);
+    const data = await res.json();
+    return { score: data.Answer ? 0 : 20 };
+  } catch {
+    return { score: 0 };
+  }
+}
+
+/* ================= HEURISTICS ================= */
+function domainHeuristics(domain) {
+  let score = 0;
+  const risky = [".xyz",".top",".site",".online",".tech"];
+
+  if (risky.some(t => domain.endsWith(t))) score += 30;
+  if (entropy(domain) > 3.8 && domain.length < 12) score += 25;
+
+  return { score };
+}
+
+/* ================= PHISHTANK SAFE ================= */
+async function checkPhishTank(url) {
+  try {
+    const res = await fetch("https://checkurl.phishtank.com/checkurl/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ url, format: "json" })
+    });
+
+    const data = await res.json();
+
+    return {
+      score: data?.results?.in_database ? 80 : 0
+    };
+  } catch {
+    return { score: 0 };
+  }
+}
+
+/* ================= ANALYZE ================= */
+async function analyze() {
+  let url = document.getElementById("urlInput").value.trim();
+  if (!url) return;
+
+  const u = safeURL(url.startsWith("http") ? url : "https://" + url);
+  if (!u) return showToast("Invalid URL", false);
+
+  showLoader();
+
+  const domain = u.hostname.toLowerCase();
+
+  const [dns, heur, phish] = await Promise.all([
+    dnsCheck(domain),
+    domainHeuristics(domain),
+    checkPhishTank(url)
+  ]);
+
+  const signals = runDetectors(url, domain);
+
+  let score = computeScore(signals);
+  score += dns.score + heur.score + phish.score;
+  score = Math.min(score, 100);
+
+  scanHistory.push({ domain, score });
+
+  hideLoader();
+
+  render(url, score, signals);
+}
+
+/* ================= LOADER ================= */
+function showLoader(){ document.getElementById("loader").classList.remove("hidden"); }
+function hideLoader(){ document.getElementById("loader").classList.add("hidden"); }
+
+/* ================= RENDER ================= */
+function render(url, score, signals) {
+  drawGraph(score);
+
+  const level =
+    score > 80 ? "CRITICAL" :
+    score > 60 ? "HIGH" :
+    score > 40 ? "MEDIUM" : "LOW";
+
+  const breakdown = signals.map(s => `- ${s.name} (+${s.score})`).join("\n");
+
+  document.getElementById("terminalOutput").textContent = `
+CYBER URL RISK ANALYZER
+--------------------------------
+Target : ${url}
+Score  : ${score}%
+Level  : ${level}
+
+----------------------------------------
+Breakdown:
+${breakdown}
+----------------------------------------
+
+
+SYSTEM INFO!
+----------------------------------------
+> Engine  : RULE ENGINE + LIVE FEED + DNS INTEL + DOMAIN HEURISTICS + PHISHTANK THREAT INTEL + VISUALIZATION LAYER
+----------------------------------------
+
+
+--------------------------------
+📡 SYSTEM STATUS
+--------------------------------
+Engine : ACTIVE
+Mode   : CYBER v1 (LIVE INTEL)
+`;
+
+  document.getElementById("result").classList.remove("hidden");
+}
+</script>
+
+
+
+
+<!-- <script>
   function showToast(msg, success = true) {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -638,6 +1016,6 @@ Mode   : CYBER v2 (LIVE INTEL)
   // Show result card
   document.getElementById("result").classList.remove("hidden");
 }
-</script>
+</script> -->
 </body>
 </html>
