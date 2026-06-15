@@ -1,8 +1,8 @@
 # 🛡 AI Cyber URL Analyzer
 
-An advanced **client-side phishing detection system** that analyzes URLs using a **multi-layer rule engine**, threat intelligence feeds, DNS checks, and cybersecurity heuristics.
+An advanced **client-side phishing detection system** that combines **cybersecurity heuristics**, **threat intelligence feeds**, and **URL analysis** to identify malicious and suspicious websites.
 
-The entire system runs **fully in the browser** and is designed for **static hosting on GitHub Pages**.
+The entire project runs **fully in the browser** and is optimized for **static hosting on GitHub Pages**.
 
 ---
 
@@ -14,103 +14,125 @@ The entire system runs **fully in the browser** and is designed for **static hos
 
 ## 🔍 Features
 
-✔ Live malicious domain feed (GitHub-hosted JSON intelligence list)  
-✔ Rule-based phishing detection engine  
-✔ DNS resolution anomaly checks (Google DNS API)  
-✔ PhishTank integration for known phishing URLs  
-✔ URL entropy analysis (randomness detection)  
-✔ Brand impersonation detection (Google, PayPal, Amazon, etc.)  
-✔ Levenshtein distance-based spoof detection  
-✔ Suspicious keyword detection (login, verify, password, bank, etc.)  
-✔ URL shortener detection (bit.ly, tinyurl)  
-✔ Risky TLD detection (.xyz, .top, .site, etc.)  
-✔ Browser fingerprint collection (non-invasive metadata only)  
-✔ Risk scoring engine (0–100%)  
-✔ Cyber-themed terminal output UI  
-✔ Risk visualization graph (Canvas-based)  
-✔ Scan history tracking (session-based)
+✔ Threat Intelligence Feed (193K+ IOC entries) <br>
+✔ URL Username Obfuscation Detection (`brand.com@malicious.site`) <br>
+✔ Brand Impersonation Detection <br>
+✔ Suspicious Domain Pattern Analysis <br>
+✔ IP-based URL Detection <br>
+✔ HTTPS Verification <br>
+✔ Entropy-based Domain Analysis <br>
+✔ DNS Intelligence Lookup <br>
+✔ Subdomain Anomaly Detection <br>
+✔ Suspicious TLD Detection (`.top`, `.xyz`, `.cyou`, etc.) <br>
+✔ Query Parameter Analysis <br>
+✔ Real-time Risk Scoring Engine <br> 
+✔ Threat Classification (LOW / MEDIUM / HIGH / CRITICAL) <br>
+✔ Terminal-style Cybersecurity Report UI
+
+All analysis is performed **entirely inside the browser**.
 
 ---
 
-## 🧠 Detection Architecture
+## 🧠 Detection Engine Overview
 
-User URL Input  
-↓  
-URL Parsing & Normalization  
-↓  
-Rule Engine (keywords, brand spoofing, structure checks)  
-↓  
-Threat Intelligence Feed Check  
-↓  
-DNS Resolution Check (Google DNS)  
-↓  
-PhishTank Lookup  
-↓  
-Entropy + Heuristic Scoring  
-↓  
-Final Risk Score (0–100)  
-↓  
-Graphical Visualization + Terminal Output
+The analyzer uses a **hybrid heuristic approach** inspired by modern phishing detection systems.
 
+### Detection Pipeline
+
+User URL <br>
+↓ <br>
+URL Parsing & Normalization <br>
+↓ <br>
+Threat Intelligence Feed Check <br>
+↓ <br>
+Heuristic Analysis <br>
+↓ <br>
+DNS Intelligence <br>
+↓ <br>
+Risk Scoring Engine <br>
+↓ <br>
+Threat Classification
 
 ---
 
 ## ⚙️ Tech Stack
 
-- HTML5
-- CSS3 (Cyberpunk / terminal UI theme)
-- Vanilla JavaScript
-- Canvas API (risk graph visualization)
-- Google DNS API
-- GitHub Pages (static hosting)
-- GitHub (version control & hosting)
+* HTML5
+* CSS3 (Cyber / Hacker UI Theme)
+* Vanilla JavaScript
+* JSON Threat Intelligence Feed
+* GitHub Pages (Static Hosting)
 
 ---
 
 ## 🔐 Why Client-Side Only?
 
-- No backend required  
-- Zero server cost  
-- Instant analysis  
-- Fully static deployment  
-- No API keys needed  
-- Easy GitHub Pages hosting  
-- Ideal for cybersecurity demos  
+This architecture ensures:
+
+* 🔒 No API keys exposed
+* 💰 Zero backend or server cost
+* ⚡ Instant real-time analysis
+* 🌍 Fully static & portable deployment
+* 🚫 No CORS or network dependency
+* 🧪 Ideal for portfolio & research
 
 ---
 
 ## ⚠️ Limitations
 
-This tool does NOT include:
+Due to the **static, client-side nature** of the project, the following are intentionally **not included**:
 
-- WHOIS domain age lookup  
-- VirusTotal or commercial threat APIs  
-- Real-time malware sandboxing  
-- Backend machine learning inference  
-- Continuous threat intelligence streaming  
+* ❌ WHOIS domain age lookup
+* ❌ VirusTotal API integration
+* ❌ Live blacklist APIs
+* ❌ Server-side validation
+* ❌ Dynamic threat intelligence APIs
+* ❌ Backend-based model training
 
-It focuses on **heuristic + DNS + reputation-based browser intelligence**.
-
----
-
-## 🧪 Intended Use
-
-- Cybersecurity learning projects  
-- Frontend security tool demos  
-- Phishing research experiments  
-- Portfolio projects  
-- GitHub Pages deployments  
+This tool focuses on **heuristic and threat intelligence analysis**, not live reputation services.
 
 ---
 
-## 🧑‍💻 Author
+## 📁 Project Structure
 
-**Tirth Bhatt**  
-🌐 Portfolio: https://tirthbhatt-developer.web.app/  
-💻 GitHub: https://github.com/tirthbhatt21  
+```text
+├── index.html
+├── main.css
+├── main.js
+├── feed.json
+├── link.ico
+└── README.md
+```
+
+---
+
+## 🛡 Detection Capabilities
+
+The analyzer detects:
+
+* Brand impersonation attacks
+* Username obfuscation attacks
+* Threat feed matches
+* Suspicious domains
+* Risky TLDs
+* IP-address URLs
+* URL entropy anomalies
+* HTTPS misuse
+* Query abuse patterns
+
+---
+
+## 👨‍💻 Author
+
+**Tirth Bhatt**
+
+🌐 Portfolio: https://tirth-bhatt-developer.web.app/
+💻 GitHub: https://github.com/tirthbhatt21
 
 ---
 
 ## 📜 Disclaimer
 
-This tool provides **probabilistic phishing risk scoring** using heuristics and public signals.
+This tool is intended for **educational and research purposes only**.
+
+No personal data is collected or transmitted. Analyses are based on heuristic methods and publicly available threat intelligence.
