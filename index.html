@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ===================================================== -->
+<!-- BASIC SEO -->
+<!-- ===================================================== -->
+
+<title>AI Cyber URL Analyzer | Phishing Detection Tool</title>
+
+<meta
+  name="title"
+  content="AI Cyber URL Analyzer | Advanced Phishing Detection Tool"
+/>
+
+<meta
+  name="description"
+  content="AI Cyber URL Analyzer is a browser-based phishing detection system that uses cybersecurity heuristics, DNS intelligence, and threat feeds to analyze malicious URLs in real time."
+/>
+
+<meta
+  name="keywords"
+  content="
+    phishing detection,
+    url analyzer,
+    cybersecurity,
+    malicious url detector,
+    threat intelligence,
+    phishing scanner,
+    url security,
+    cyber security tool,
+    dns intelligence,
+    browser security,
+    security research,
+    threat feed,
+    url reputation,
+    phishing detection tool
+  "
+/>
+
+<meta
+  name="author"
+  content="Tirth Bhatt"
+/>
+
+<meta
+  name="robots"
+  content="index, follow"
+/>
+
+<meta
+  name="language"
+  content="English"
+/>
+
+<meta
+  name="revisit-after"
+  content="7 days"
+/>
+
+<meta
+  name="theme-color"
+  content="#111111"
+/>
+
+<!-- ===================================================== -->
+<!-- CANONICAL -->
+<!-- ===================================================== -->
+
+<link
+  rel="canonical"
+  href="https://tirthbhatt21.github.io/malicious-url-detector/"
+/>
+
+<!-- ===================================================== -->
+<!-- FAVICON -->
+<!-- ===================================================== -->
+
+<link
+  rel="icon"
+  href="link.ico"
+/>
+
+<link
+  rel="apple-touch-icon"
+  href="link.ico"
+/>
+
+<!-- ===================================================== -->
+<!-- OPEN GRAPH (FACEBOOK / LINKEDIN) -->
+<!-- ===================================================== -->
+
+<meta
+  property="og:type"
+  content="website"
+/>
+
+<meta
+  property="og:title"
+  content="AI Cyber URL Analyzer"
+/>
+
+<meta
+  property="og:description"
+  content="Advanced browser-based phishing detection using threat intelligence, DNS analysis, and cybersecurity heuristics."
+/>
+
+<meta
+  property="og:url"
+  content="https://tirthbhatt21.github.io/malicious-url-detector/"
+/>
+
+<meta
+  property="og:site_name"
+  content="AI Cyber URL Analyzer"
+/>
+
+<meta
+  property="og:image"
+  content="https://tirthbhatt21.github.io/malicious-url-detector/preview.png"
+/>
+
+<meta
+  property="og:image:width"
+  content="1200"
+/>
+
+<meta
+  property="og:image:height"
+  content="630"
+/>
+
+<meta
+  property="og:locale"
+  content="en_US"
+/>
+
+<!-- ===================================================== -->
+<!-- TWITTER CARD -->
+<!-- ===================================================== -->
+
+<meta
+  name="twitter:card"
+  content="summary_large_image"
+/>
+
+<meta
+  name="twitter:title"
+  content="AI Cyber URL Analyzer"
+/>
+
+<meta
+  name="twitter:description"
+  content="Browser-based phishing detection using threat intelligence and cybersecurity heuristics."
+/>
+
+<meta
+  name="twitter:image"
+  content="https://tirthbhatt21.github.io/malicious-url-detector/preview.png"
+/>
+
+<meta
+  name="twitter:creator"
+  content="@tirthbhatt21"
+/>
+
+<!-- ===================================================== -->
+<!-- PWA / MOBILE -->
+<!-- ===================================================== -->
+
+<meta
+  name="mobile-web-app-capable"
+  content="yes"
+/>
+
+<meta
+  name="apple-mobile-web-app-capable"
+  content="yes"
+/>
+
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black"
+/>
+
+<meta
+  name="apple-mobile-web-app-title"
+  content="AI Cyber URL Analyzer"
+/>
+
+<meta
+  name="application-name"
+  content="AI Cyber URL Analyzer"
+/>
+
+<!-- ===================================================== -->
+<!-- STRUCTURED DATA (JSON-LD) -->
+<!-- ===================================================== -->
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AI Cyber URL Analyzer",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Web Browser",
+  "description": "Browser-based phishing detection tool using threat intelligence, DNS intelligence, and cybersecurity heuristics.",
+  "url": "https://tirthbhatt21.github.io/malicious-url-detector/",
+  "author": {
+    "@type": "Person",
+    "name": "Tirth Bhatt"
+  },
+  "creator": {
+    "@type": "Person",
+    "name": "Tirth Bhatt"
+  }
+}
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="link.ico">
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <header class="top-bar">
+    <div class="header-row">
+
+      <div class="hero-text">
+        <h1>🛡 AI CYBER URL ANALYZER</h1>
+        <p>> Advanced Phishing Detection Engine v1.0</p>
+      </div>
+
+      <button id="themeBtn" onclick="toggleTheme()">
+        🌙 Dark
+      </button>
+
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="container">
+
+    <!-- URL SCANNER -->
+    <section class="card fade-up">
+
+      <label
+        style="
+          display:block;
+          margin-bottom:12px;
+          font-size:14px;
+          color:var(--text-dim);
+        "
+      >
+        Target URL
+      </label>
+
+      <div class="input-box">
+
+        <span>root@cyber:~$</span>
+
+        <input
+          id="urlInput"
+          type="url"
+          placeholder="https://example.com"
+          autocomplete="off"
+        >
+
+        <button
+          class="scan-btn"
+          onclick="analyze()"
+        >
+          SCAN
+        </button>
+
+      </div>
+
+      <!-- Loader -->
+      <div id="loader" class="loader hidden"></div>
+
+      <div
+        id="loaderText"
+        class="hidden"
+        style="
+          text-align:center;
+          font-size:12px;
+          margin-top:8px;
+        "
+      >
+        Initializing AI…
+        <span id="timer">3</span>s
+      </div>
+
+      <!-- Chips -->
+      <div class="samples">
+
+        <span class="chip">
+          🎣 Phishing URL
+        </span>
+
+        <span class="chip">
+          🌐 IP Address URL
+        </span>
+
+        <span class="chip">
+          🔒 HTTPS Site
+        </span>
+
+        <span class="chip">
+          ⚠ Suspicious Domain
+        </span>
+
+      </div>
+
+    </section>
+
+    <!-- RESULT -->
+    <section
+  id="result"
+  class="card hidden fade-up"
+>
+
+  <div class="result-header">
+    <h2>
+      📊 Scan Report
+    </h2>
+  </div>
+
+  <pre id="terminalOutput"></pre>
+
+  <canvas
+    id="riskGraph"
+    width="520"
+    height="220"
+  ></canvas>
+
+</section>
+
+
+
+    <section class="card">
+  <h2>🕘 Recent Scans</h2>
+  <div id="history">
+    No scans yet
+  </div>
+</section>
+
+
+  </main>
+
+<footer class="footer">
+
+  <div class="footer-grid">
+
+    <div class="footer-section">
+      <h3>🛡 AI Cyber URL Analyzer</h3>
+
+      <p>
+        Advanced phishing detection powered by
+        threat intelligence, heuristic analysis,
+        and AI-driven security scoring.
+      </p>
+    </div>
+
+    <div class="footer-section">
+      <h4>⚡ Features</h4>
+
+      <ul>
+        <li>Real-time Threat Feed</li>
+        <li>DNS Intelligence</li>
+        <li>Brand Spoof Detection</li>
+        <li>Entropy Analysis</li>
+        <li>HTTPS Verification</li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>👨‍💻 Developer</h4>
+
+      <p>
+        <strong>Tirth Bhatt</strong><br>
+        Developer ◆ Designer ◆ Researcher
+      </p>
+
+      <span class="version">
+        CYBER v1.0
+      </span>
+    </div>
+
+  </div>
+
+  <div class="disclaimer-box">
+
+    <div class="disclaimer-title">
+      ⚠ SECURITY DISCLAIMER
+    </div>
+
+    <ul>
+      <li>For educational and research purposes only.</li>
+      <li>No personal data is collected or stored.</li>
+      <li>Analysis uses publicly available threat intelligence.</li>
+      <li>Unauthorized or malicious use is strictly prohibited.</li>
+    </ul>
+
+  </div>
+
+  <div class="footer-bottom">
+
+    <span>
+      © 2026 Tirth Bhatt
+    </span>
+
+    <span>
+      Built with HTML • CSS • JavaScript
+    </span>
+
+  </div>
+
+</footer>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+  <!-- MAIN JS -->
+  <script src="main.js"></script>
+
+</body>
+</html>
