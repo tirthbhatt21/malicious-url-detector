@@ -33,6 +33,7 @@ body:not(.light-mode) {
   --card: #111827;
 
   --text: #f8fafc;
+    --text1: #0f172a;
   --muted: #94a3b8;
 
   --border: #f8fafc;
@@ -52,7 +53,7 @@ html {
 }
 
 body {
-  margin: 0;
+
   background: var(--bg);
 
   background-image:
@@ -254,8 +255,10 @@ button {
   border-radius: 12px;
 
   font-size: 14px;
-
-  background: var(--card);
+color: var(--text1);
+  /* background: var(--card); */
+      background: #f7dc6f;
+      font-weight: 800;
 }
 
 /* ================= RESULT ================= */
@@ -649,6 +652,28 @@ body:not(.light-mode)
   font-weight: 700;
 }
 
+.version1 {
+
+  display: inline-block;
+
+  margin-top: 12px;
+
+  padding: 8px 14px;
+
+  /* background: var(--primary); */
+  color: var(--primary);
+
+  /* color: rgb(23, 13, 13); */
+
+  /* border: 2px solid black; */
+
+  border-radius: 12px;
+
+  font-weight: 700;
+}
+
+
+
 .disclaimer-box {
 
   padding: 18px;
@@ -702,4 +727,19 @@ body:not(.light-mode)
 
   font-size: 14px;
 
+}
+
+
+.fade-out {
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+}
+
+.history-item {
+  padding: 6px 10px;
+  margin: 4px 0;
+  border-left: 5px solid #000000;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
 }

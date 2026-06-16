@@ -1067,6 +1067,19 @@ async function analyze() {
 
     hideLoader();
   }
+
+  function saveScan(url, risk) {
+  let history = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+
+  history.push({
+    url,
+    risk,
+    time: new Date().toISOString()
+  });
+
+  localStorage.setItem("scanHistory", JSON.stringify(history));
+}
+
 }
 
 /* ================= RENDER ================= */
@@ -1243,3 +1256,99 @@ window.addEventListener(
   }
 );
 
+function reset() {
+  // ===== INPUT FADE OUT =====
+  const urlInput = document.getElementById("urlInput");
+  if (urlInput) {
+    urlInput.classList.add("fade-out");
+    setTimeout(() => {
+      urlInput.value = "";
+      urlInput.classList.remove("fade-out");
+    }, 200);
+  }
+
+  // ===== RESULT SECTION ANIMATION =====
+  const result = document.getElementById("result");
+  if (result && !result.classList.contains("hidden")) {
+    result.style.transition = "all 0.3s ease";
+    result.style.opacity = "0";
+    result.style.transform = "translateY(10px)";
+
+    setTimeout(() => {
+      result.classList.add("hidden");
+      result.style.opacity = "";
+      result.style.transform = "";
+    }, 300);
+  }
+
+  // ===== TERMINAL CLEAR (animated) =====
+  const terminal = document.getElementById("terminalOutput");
+  if (terminal) {
+    terminal.style.opacity = "0";
+    setTimeout(() => {
+      terminal.textContent = "";
+      terminal.style.opacity = "1";
+    }, 200);
+  }
+
+  // ===== LOADER RESET =====
+  const loader = document.getElementById("loader");
+  const loaderText = document.getElementById("loaderText");
+  const timer = document.getElementById("timer");
+
+  if (loader) loader.classList.add("hidden");
+  if (loaderText) loaderText.classList.add("hidden");
+  if (timer) timer.textContent = "3";
+
+  // ===== CANVAS CLEAR (smooth fade) =====
+  const canvas = document.getElementById("riskGraph");
+  if (canvas) {
+    const ctx = canvas.getContext("2d");
+
+    // fade-out effect before clearing
+    let alpha = 1;
+
+    function fadeCanvas() {
+      if (alpha <= 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      ctx.fillStyle = `rgba(17,17,17,${0.1})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      alpha -= 0.1;
+      requestAnimationFrame(fadeCanvas);
+    }
+
+    fadeCanvas();
+  }
+
+  // ===== HISTORY: KEEP LOCALSTORAGE =====
+  const history = document.getElementById("history");
+
+  // DO NOT clear localStorage — only re-render UI
+  const savedHistory = JSON.parse(localStorage.getItem("scanHistory") || "[]");
+
+  if (history) {
+    if (savedHistory.length === 0) {
+      history.innerHTML = "No scans yet";
+    } else {
+      history.innerHTML = savedHistory
+        .slice(-10)
+        .reverse()
+        .map(item => `
+          <div class="history-item fade-up">
+            <strong>${item.url}</strong>
+            <span>Risk: ${item.risk}%</span>
+          </div>
+        `)
+        .join("");
+    }
+  }
+
+  // ===== TOAST =====
+  if (typeof showToast === "function") {
+    showToast("UI reset completed");
+  }
+}
